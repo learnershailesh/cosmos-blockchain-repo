@@ -64,6 +64,9 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 
 	// counter tutorial app wiring 1: add counter imports below
+	counter "github.com/cosmos/example/x/counter"
+	counterkeeper "github.com/cosmos/example/x/counter/keeper"
+	countertypes "github.com/cosmos/example/x/counter/types"
 )
 
 const (
@@ -113,6 +116,7 @@ type ExampleApp struct {
 	SlashingKeeper        slashingkeeper.Keeper
 	ConsensusParamsKeeper consensusparamkeeper.Keeper
 	// counter tutorial app wiring 2: add the counter keeper field below
+	CounterKeeper        *counterkeeper.Keeper
 
 	// the module manager
 	ModuleManager      *module.Manager
@@ -168,6 +172,7 @@ func NewExampleApp(
 		govtypes.StoreKey,
 		consensusparamtypes.StoreKey,
 		// counter tutorial app wiring 3: add the counter store key below
+		countertypes.StoreKey,
 	)
 
 	if err := bApp.RegisterStreamingServices(appOpts, keys); err != nil {
@@ -277,6 +282,11 @@ func NewExampleApp(
 
 	// counter tutorial app wiring 4: create the counter keeper below
 
+	app.CounterKeeper = counterkeeper.NewKeeper(
+		runtime.NewKVStoreService(keys[countertypes.StoreKey]),
+		appCodec,
+	)
+
 	app.ModuleManager = module.NewManager(
 		genutil.NewAppModule(
 			app.AccountKeeper, app.StakingKeeper, app,
@@ -291,6 +301,7 @@ func NewExampleApp(
 		staking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 		vesting.NewAppModule(app.AccountKeeper, app.BankKeeper),
 		// counter tutorial app wiring 5: register the counter module below
+		counter.NewAppModule(appCodec, app.CounterKeeper),
 	)
 
 	// BasicModuleManager defines the module BasicManager is in charge of setting up basic,
@@ -345,6 +356,7 @@ func NewExampleApp(
 		consensusparamtypes.ModuleName,
 		vestingtypes.ModuleName,
 		// counter tutorial app wiring 6: add the counter module to genesis order below
+		countertypes.ModuleName,
 		genutiltypes.ModuleName,
 	}
 
@@ -358,6 +370,7 @@ func NewExampleApp(
 		govtypes.ModuleName,
 		vestingtypes.ModuleName,
 		// counter tutorial app wiring 7: add the counter module to export order below
+		countertypes.ModuleName,
 		genutiltypes.ModuleName,
 	}
 
